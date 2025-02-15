@@ -78,8 +78,11 @@ void SoftSPI::setDataMode(uint8_t mode) {
             break;
     }
 
-    //digitalWrite(_sck, _ckp ? HIGH : LOW);
+#ifndef FAST_GPIO_OPERATIONS    
+    digitalWrite(_sck, _ckp ? HIGH : LOW);
+#else    
     digitalWriteSCK(_ckp ? HIGH : LOW);
+#endif    
 }
 
 void SoftSPI::setClockDivider(uint32_t div) {
@@ -150,26 +153,39 @@ uint8_t SoftSPI::transfer(uint8_t val) {
     {
         if (_cke) {
             sck ^= 1;
-            //digitalWrite(_sck, sck);            
-            digitalWriteSCK(sck);
+            #ifndef FAST_GPIO_OPERATIONS    
+                digitalWrite(_sck, sck);
+            #else    
+                digitalWriteSCK(sck);
+            #endif    
             wait(del);
         }
 
         /* ... Write bit */
-        //digitalWrite(_mosi, ((val & (1<<bit)) ? HIGH : LOW));
-        digitalWriteMOSI(((val & (1<<bit)) ? HIGH : LOW));
+
+        #ifndef FAST_GPIO_OPERATIONS    
+            digitalWrite(_mosi, ((val & (1<<bit)) ? HIGH : LOW));
+        #else    
+            digitalWriteMOSI(((val & (1<<bit)) ? HIGH : LOW));
+        #endif           
 
         wait(del);
 
         sck ^= 1u; 
-        //digitalWrite(_sck, sck);
-        digitalWriteSCK(sck);
 
+        #ifndef FAST_GPIO_OPERATIONS    
+            digitalWrite(_sck, sck);            
+        #else    
+            digitalWriteSCK(sck);
+        #endif                  
 
         /* ... Read bit */
         {
-            //bval = digitalRead(_miso);
-            bval = digitalReadMISO();
+            #ifndef FAST_GPIO_OPERATIONS    
+                bval = digitalRead(_miso);
+            #else 
+                bval = digitalReadMISO();
+            #endif            
 
             if (_order == MSBFIRST) {
                 out <<= 1;
@@ -184,8 +200,11 @@ uint8_t SoftSPI::transfer(uint8_t val) {
 
         if (!_cke) {
             sck ^= 1u;
-            //digitalWrite(_sck, sck);
-            digitalWriteSCK(sck);
+            #ifndef FAST_GPIO_OPERATIONS    
+                digitalWrite(_sck, sck);
+            #else    
+                digitalWriteSCK(sck);
+            #endif                  
         }
     }
 
