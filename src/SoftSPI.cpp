@@ -30,6 +30,7 @@
 
 
 #include <SoftSPI.h>
+#include <debug.h>
 
 SoftSPI::SoftSPI(uint8_t mosi, uint8_t miso, uint8_t sck) {
     _mosi = mosi;
@@ -77,7 +78,8 @@ void SoftSPI::setDataMode(uint8_t mode) {
             break;
     }
 
-    digitalWrite(_sck, _ckp ? HIGH : LOW);
+    //digitalWrite(_sck, _ckp ? HIGH : LOW);
+    digitalWriteSCK(_ckp ? HIGH : LOW);
 }
 
 void SoftSPI::setClockDivider(uint32_t div) {
@@ -110,9 +112,11 @@ void SoftSPI::setClockDivider(uint32_t div) {
 }
 
 void SoftSPI::wait(uint_fast8_t del) {
-    for (uint_fast8_t i = 0; i < del; i++) {
+   // Delay_Us(1);
+
+ /*   for (uint_fast8_t i = 0; i < del; i++) {
         asm volatile("nop");
-    }
+    }*/
 }
 
 uint8_t SoftSPI::transfer(uint8_t val) {
@@ -146,20 +150,26 @@ uint8_t SoftSPI::transfer(uint8_t val) {
     {
         if (_cke) {
             sck ^= 1;
-            digitalWrite(_sck, sck);            
+            //digitalWrite(_sck, sck);            
+            digitalWriteSCK(sck);
             wait(del);
         }
 
         /* ... Write bit */
-        digitalWrite(_mosi, ((val & (1<<bit)) ? HIGH : LOW));
+        //digitalWrite(_mosi, ((val & (1<<bit)) ? HIGH : LOW));
+        digitalWriteMOSI(((val & (1<<bit)) ? HIGH : LOW));
 
         wait(del);
 
-        sck ^= 1u; digitalWrite(_sck, sck);
+        sck ^= 1u; 
+        //digitalWrite(_sck, sck);
+        digitalWriteSCK(sck);
+
 
         /* ... Read bit */
         {
-            bval = digitalRead(_miso);
+            //bval = digitalRead(_miso);
+            bval = digitalReadMISO();
 
             if (_order == MSBFIRST) {
                 out <<= 1;
@@ -174,7 +184,8 @@ uint8_t SoftSPI::transfer(uint8_t val) {
 
         if (!_cke) {
             sck ^= 1u;
-            digitalWrite(_sck, sck);
+            //digitalWrite(_sck, sck);
+            digitalWriteSCK(sck);
         }
     }
 
